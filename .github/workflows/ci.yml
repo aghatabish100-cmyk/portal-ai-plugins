@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shunt-evals:
+    name: Shunt evals
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes jq
+
+      - name: Check shell syntax
+        run: find plugins/shunt -type f \( -name '*.sh' -o -path '*/hooks/check-file-size' -o -path '*/hooks/check-bash-read' -o -path '*/scripts/bulk-read' -o -path '*/scripts/code-write' \) -print0 | xargs -0 -r -n1 bash -n
+
+      - name: Run shunt evals
+        run: bash plugins/shunt/evals/run.sh
